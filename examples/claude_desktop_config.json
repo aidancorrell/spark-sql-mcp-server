@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "spark-sql": {
+      "command": "spark-sql-mcp",
+      "env": {
+        "SPARK_HOST": "your-emr-master-node.amazonaws.com",
+        "SPARK_PORT": "10000",
+        "SPARK_DATABASE": "default",
+        "SPARK_AUTH": "NONE"
+      }
+    }
+  }
+}

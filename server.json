@@ -1,0 +1,72 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.aidancorrell/spark-sql",
+  "description": "Query Spark SQL clusters via Thrift/HiveServer2 protocol. Compatible with AWS EMR, Databricks, and any HiveServer2-compatible system.",
+  "repository": {
+    "url": "https://github.com/aidancorrell/spark-sql-mcp-server",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "github",
+      "identifier": "aidancorrell/spark-sql-mcp-server",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtime": "python",
+      "environmentVariables": [
+        {
+          "name": "SPARK_HOST",
+          "description": "Hostname of the Spark Thrift Server",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "SPARK_PORT",
+          "description": "Port of the Spark Thrift Server (default: 10000)",
+          "isRequired": false,
+          "format": "number",
+          "isSecret": false
+        },
+        {
+          "name": "SPARK_DATABASE",
+          "description": "Default database to use",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "SPARK_AUTH",
+          "description": "Authentication method: NONE, LDAP, or KERBEROS",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "SPARK_USERNAME",
+          "description": "Username for LDAP authentication",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "SPARK_PASSWORD",
+          "description": "Password for LDAP authentication",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "SPARK_KERBEROS_SERVICE_NAME",
+          "description": "Kerberos service name (default: hive)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
