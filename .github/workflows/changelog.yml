@@ -1,0 +1,81 @@
+name: Update Changelog
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  update-changelog:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Determine change type from labels
+        id: change-type
+        run: |
+          LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
+          if echo "$LABELS" | grep -q '"breaking"'; then
+            echo "type=Breaking Change" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q '"feature"'; then
+            echo "type=Feature" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q '"enhancement"'; then
+            echo "type=Enhancement" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q '"bug"'; then
+            echo "type=Bug Fix" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q '"docs"'; then
+            echo "type=Documentation" >> $GITHUB_OUTPUT
+          else
+            echo "type=Internal" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update CHANGELOG.md
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          CHANGE_TYPE: ${{ steps.change-type.outputs.type }}
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          ENTRY="* ${PR_TITLE} ([#${PR_NUMBER}](https://github.com/${{ github.repository }}/pull/${PR_NUMBER})) by @${PR_AUTHOR}"
+
+          # Check if Unreleased section exists
+          if grep -q "^## Unreleased" CHANGELOG.md; then
+            # Check if this change type subsection exists under Unreleased
+            if awk '/^## Unreleased/,/^## [0-9]/' CHANGELOG.md | grep -q "^### ${CHANGE_TYPE}"; then
+              # Add entry under existing subsection
+              sed -i "/^### ${CHANGE_TYPE}/a\\
+          ${ENTRY}" CHANGELOG.md
+            else
+              # Add new subsection after Unreleased header
+              sed -i "/^## Unreleased/a\\
+          \\
+          ### ${CHANGE_TYPE}\\
+          \\
+          ${ENTRY}" CHANGELOG.md
+            fi
+          else
+            # Create Unreleased section after the header
+            sed -i '/^and this project adheres to/a\\
+          \\
+          ## Unreleased\\
+          \\
+          ### '"${CHANGE_TYPE}"'\\
+          \\
+          '"${ENTRY}"'' CHANGELOG.md
+          fi
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git diff --staged --quiet || git commit -m "docs: update changelog for #${{ github.event.pull_request.number }}"
+          git push
