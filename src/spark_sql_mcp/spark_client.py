@@ -28,15 +28,17 @@ class SparkSQLClient:
         return self._connection
 
     def connect(self) -> None:
-        self._connection = hive.Connection(
-            host=self._config.host,
-            port=self._config.port,
-            database=self._config.database,
-            auth=self._config.auth,
-            username=self._config.username,
-            password=self._config.password,
-            kerberos_service_name=self._config.kerberos_service_name,
-        )
+        kwargs: dict[str, Any] = {
+            "host": self._config.host,
+            "port": self._config.port,
+            "database": self._config.database,
+            "auth": self._config.auth,
+            "username": self._config.username,
+            "password": self._config.password,
+        }
+        if self._config.auth == "KERBEROS":
+            kwargs["kerberos_service_name"] = self._config.kerberos_service_name
+        self._connection = hive.Connection(**kwargs)
 
     def close(self) -> None:
         if self._connection:
@@ -61,7 +63,7 @@ class SparkSQLClient:
     def list_tables(self, database: str | None = None) -> list[str]:
         db = _validate_identifier(database or self._config.database)
         results = self.execute_query(f"SHOW TABLES IN {db}")
-        return [next(iter(r.values())) for r in results]
+        return [r.get("tableName", next(iter(r.values()))) for r in results]
 
     def describe_table(self, table: str, database: str | None = None) -> list[dict[str, Any]]:
         db = _validate_identifier(database or self._config.database)
