@@ -45,7 +45,6 @@ class TestSparkSQLClient:
             auth="NONE",
             username=None,
             password=None,
-            kerberos_service_name="hive",
         )
 
     def test_execute_query(self, connected_client, mock_hive_cursor):

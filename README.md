@@ -29,7 +29,43 @@ export SPARK_DATABASE="default"  # default
 export SPARK_AUTH="NONE"         # NONE | LDAP | KERBEROS
 ```
 
-### 2. Add to Claude Desktop
+### 2. Add to Claude Code
+
+**Global** (all projects) — add to `~/.claude.json` under your project's `mcpServers`:
+
+```json
+{
+  "mcpServers": {
+    "spark-sql": {
+      "command": "spark-sql-mcp",
+      "env": {
+        "SPARK_HOST": "your-emr-master-node.amazonaws.com",
+        "SPARK_PORT": "10000",
+        "SPARK_AUTH": "NONE"
+      }
+    }
+  }
+}
+```
+
+**Project-level** — add to `.claude/mcp.json` in your repo:
+
+```json
+{
+  "mcpServers": {
+    "spark-sql": {
+      "command": "spark-sql-mcp",
+      "env": {
+        "SPARK_HOST": "your-emr-master-node.amazonaws.com",
+        "SPARK_PORT": "10000",
+        "SPARK_AUTH": "NONE"
+      }
+    }
+  }
+}
+```
+
+### 3. Add to Claude Desktop
 
 Add to your `claude_desktop_config.json`:
 
@@ -47,7 +83,7 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
-### 3. Query
+### 4. Query
 
 Ask Claude things like:
 
@@ -106,6 +142,66 @@ pip install -e ".[dev]"
 pytest
 ruff check .
 ```
+
+### Local Testing with Docker
+
+A Docker Compose setup provides a local Spark Thrift Server with sample data for integration testing.
+
+```bash
+# Start the Spark Thrift Server
+cd docker && docker compose up -d
+
+# Wait for it to be ready (takes ~30s on first start)
+docker logs -f spark-thrift-server  # look for "Sample data loaded."
+
+# Run integration tests
+pytest -m integration -v
+
+# Tear down
+cd docker && docker compose down -v
+```
+
+The local server comes with sample tables: `default.employees`, `default.orders`, and `test_db.metrics`.
+
+Unit tests run by default with `pytest` (integration tests are skipped unless `-m integration` is specified).
+
+#### Using the local server with Claude Code
+
+With the Docker Spark server running, add it to your MCP config to test the server interactively.
+
+**Global** — add to `~/.claude.json` under your project's `mcpServers`:
+
+```json
+{
+  "spark-sql": {
+    "command": "spark-sql-mcp",
+    "env": {
+      "SPARK_HOST": "localhost",
+      "SPARK_PORT": "10000",
+      "SPARK_AUTH": "NONE"
+    }
+  }
+}
+```
+
+**Project-level** — add to `.claude/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "spark-sql": {
+      "command": "spark-sql-mcp",
+      "env": {
+        "SPARK_HOST": "localhost",
+        "SPARK_PORT": "10000",
+        "SPARK_AUTH": "NONE"
+      }
+    }
+  }
+}
+```
+
+Then start a new Claude Code session and ask it to query the sample data.
 
 ## License
 
