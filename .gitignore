@@ -17,3 +17,5 @@ env/
 htmlcov/
 .coverage
 *.log
+docker/spark-warehouse/
+docker/metastore_db/

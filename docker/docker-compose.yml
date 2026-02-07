@@ -1,0 +1,22 @@
+services:
+  spark-thrift:
+    image: apache/spark:3.5.6
+    container_name: spark-thrift-server
+    user: root
+    ports:
+      - "10000:10000"
+      - "4040:4040"
+    volumes:
+      - ./entrypoint.sh:/opt/entrypoint.sh
+      - ./init-data.sql:/opt/init-data.sql
+      - spark-data:/opt/spark-data
+    entrypoint: ["/bin/bash", "/opt/entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/10000'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+volumes:
+  spark-data:
