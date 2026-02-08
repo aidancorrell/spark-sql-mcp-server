@@ -90,3 +90,14 @@ class TestSparkSQLClient:
     def test_close_when_not_connected(self, spark_config):
         client = SparkSQLClient(spark_config)
         client.close()  # should not raise
+
+    @patch("spark_sql_mcp.spark_client.hive.Connection")
+    def test_connect_error_sanitized(self, mock_conn_cls, spark_config):
+        mock_conn_cls.side_effect = Exception("secret connection details here")
+        client = SparkSQLClient(spark_config)
+        with pytest.raises(ConnectionError, match="Failed to connect") as exc_info:
+            client.connect()
+        # Original exception details should not leak
+        assert "secret connection details" not in str(exc_info.value)
+        # Should not chain the original exception
+        assert exc_info.value.__cause__ is None
