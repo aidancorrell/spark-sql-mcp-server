@@ -19,3 +19,5 @@ htmlcov/
 *.log
 docker/spark-warehouse/
 docker/metastore_db/
+.DS_Store
+.mcpregistry_*
