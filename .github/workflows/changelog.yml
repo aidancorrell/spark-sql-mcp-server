@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
@@ -107,10 +108,22 @@ jobs:
               f.write("\n".join(new_lines))
           PYEOF
 
-      - name: Commit and push
+      - name: Create changelog PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          BRANCH="changelog/pr-${{ github.event.pull_request.number }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
           git add CHANGELOG.md
-          git diff --staged --quiet || git commit -m "docs: update changelog for #${{ github.event.pull_request.number }}"
-          git push
+          if git diff --staged --quiet; then
+            echo "No changelog changes to commit"
+            exit 0
+          fi
+          git commit -m "docs: update changelog for #${{ github.event.pull_request.number }}"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "docs: update changelog for #${{ github.event.pull_request.number }}" \
+            --body "Auto-generated changelog entry for #${{ github.event.pull_request.number }}." \
+            --label "docs"
