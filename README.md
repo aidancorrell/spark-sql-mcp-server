@@ -16,7 +16,13 @@ Works with any HiveServer2-compatible system: **Apache Spark**, **AWS EMR**, **H
 ## Installation
 
 ```bash
-pip install git+https://github.com/aidancorrell/spark-sql-mcp-server.git
+pip install spark-sql-mcp-server
+```
+
+Or run directly with [`uvx`](https://docs.astral.sh/uv/):
+
+```bash
+uvx spark-sql-mcp-server
 ```
 
 ## Quick Start
@@ -38,7 +44,8 @@ export SPARK_AUTH="NONE"         # NONE | LDAP | KERBEROS | CUSTOM | NOSASL
 {
   "mcpServers": {
     "spark-sql": {
-      "command": "spark-sql-mcp",
+      "command": "uvx",
+      "args": ["spark-sql-mcp-server"],
       "env": {
         "SPARK_HOST": "your-emr-master-node.amazonaws.com",
         "SPARK_PORT": "10000",
@@ -55,7 +62,8 @@ export SPARK_AUTH="NONE"         # NONE | LDAP | KERBEROS | CUSTOM | NOSASL
 {
   "mcpServers": {
     "spark-sql": {
-      "command": "spark-sql-mcp",
+      "command": "uvx",
+      "args": ["spark-sql-mcp-server"],
       "env": {
         "SPARK_HOST": "your-emr-master-node.amazonaws.com",
         "SPARK_PORT": "10000",
@@ -74,7 +82,8 @@ Add to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "spark-sql": {
-      "command": "spark-sql-mcp",
+      "command": "uvx",
+      "args": ["spark-sql-mcp-server"],
       "env": {
         "SPARK_HOST": "your-emr-master-node.amazonaws.com",
         "SPARK_PORT": "10000"
@@ -175,7 +184,8 @@ With the Docker Spark server running, add it to your MCP config to test the serv
 ```json
 {
   "spark-sql": {
-    "command": "spark-sql-mcp",
+    "command": "uvx",
+    "args": ["spark-sql-mcp-server"],
     "env": {
       "SPARK_HOST": "localhost",
       "SPARK_PORT": "10000",
@@ -191,7 +201,8 @@ With the Docker Spark server running, add it to your MCP config to test the serv
 {
   "mcpServers": {
     "spark-sql": {
-      "command": "spark-sql-mcp",
+      "command": "uvx",
+      "args": ["spark-sql-mcp-server"],
       "env": {
         "SPARK_HOST": "localhost",
         "SPARK_PORT": "10000",
