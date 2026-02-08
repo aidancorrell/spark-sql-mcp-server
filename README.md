@@ -1,5 +1,7 @@
 # Spark SQL MCP Server
 
+<!-- mcp-name: io.github.aidancorrell/spark-sql-mcp-server -->
+
 An [MCP](https://modelcontextprotocol.io) server that enables AI assistants to query Spark SQL clusters via the Thrift/HiveServer2 protocol.
 
 Works with any HiveServer2-compatible system: **Apache Spark**, **AWS EMR**, **Hive**, **Impala**, **Presto**.
