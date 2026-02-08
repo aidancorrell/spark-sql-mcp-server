@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.aidancorrell/spark-sql-mcp-server",
   "title": "Spark SQL",
-  "description": "Query Spark SQL clusters via Thrift/HiveServer2 protocol. Works with Apache Spark, AWS EMR, Hive, Impala, and Presto.",
+  "description": "Query Spark SQL clusters via Thrift/HiveServer2. Works with Spark, EMR, Hive, Impala.",
   "repository": {
     "url": "https://github.com/aidancorrell/spark-sql-mcp-server",
     "source": "github"
