@@ -1,21 +1,21 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.aidancorrell/spark-sql",
-  "description": "Query Spark SQL clusters via Thrift/HiveServer2 protocol. Compatible with AWS EMR, Databricks, and any HiveServer2-compatible system.",
+  "name": "io.github.aidancorrell/spark-sql-mcp-server",
+  "title": "Spark SQL",
+  "description": "Query Spark SQL clusters via Thrift/HiveServer2 protocol. Works with Apache Spark, AWS EMR, Hive, Impala, and Presto.",
   "repository": {
     "url": "https://github.com/aidancorrell/spark-sql-mcp-server",
     "source": "github"
   },
-  "version": "0.1.0",
+  "version": "0.1.2",
   "packages": [
     {
-      "registryType": "github",
-      "identifier": "aidancorrell/spark-sql-mcp-server",
-      "version": "0.1.0",
+      "registryType": "pypi",
+      "identifier": "spark-sql-mcp-server",
+      "version": "0.1.2",
       "transport": {
         "type": "stdio"
       },
-      "runtime": "python",
       "environmentVariables": [
         {
           "name": "SPARK_HOST",
@@ -40,7 +40,7 @@
         },
         {
           "name": "SPARK_AUTH",
-          "description": "Authentication method: NONE, LDAP, or KERBEROS",
+          "description": "Authentication method: NONE, LDAP, KERBEROS, CUSTOM, or NOSASL",
           "isRequired": false,
           "format": "string",
           "isSecret": false
