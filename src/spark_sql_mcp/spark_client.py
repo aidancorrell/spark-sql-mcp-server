@@ -38,7 +38,13 @@ class SparkSQLClient:
         }
         if self._config.auth == "KERBEROS":
             kwargs["kerberos_service_name"] = self._config.kerberos_service_name
-        self._connection = hive.Connection(**kwargs)
+        try:
+            self._connection = hive.Connection(**kwargs)
+        except Exception as exc:
+            raise ConnectionError(
+                f"Failed to connect to Spark Thrift Server at "
+                f"{self._config.host}:{self._config.port}: {type(exc).__name__}"
+            ) from None
 
     def close(self) -> None:
         if self._connection:

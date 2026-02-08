@@ -6,11 +6,12 @@ Works with any HiveServer2-compatible system: **Apache Spark**, **AWS EMR**, **H
 
 ## Features
 
-- **Query Spark SQL** — Execute SQL queries against your Spark cluster
+- **Query Spark SQL** — Execute read-only SQL queries against your Spark cluster
 - **Schema Discovery** — List databases, tables, and describe table structures
-- **Multiple Auth Methods** — NONE, LDAP, and Kerberos authentication
+- **Multiple Auth Methods** — NONE, LDAP, NOSASL, CUSTOM, and Kerberos authentication
 - **EMR Compatible** — Works with AWS EMR clusters out of the box
-- **Safety Defaults** — Automatic LIMIT clause on unbounded queries
+- **Read-Only Enforcement** — Only SELECT, SHOW, DESCRIBE, EXPLAIN, and WITH statements are allowed
+- **Safety Defaults** — Automatic LIMIT clause on unbounded queries, sanitized error messages
 
 ## Installation
 
@@ -26,7 +27,7 @@ pip install git+https://github.com/aidancorrell/spark-sql-mcp-server.git
 export SPARK_HOST="your-emr-master-node.amazonaws.com"
 export SPARK_PORT="10000"        # default
 export SPARK_DATABASE="default"  # default
-export SPARK_AUTH="NONE"         # NONE | LDAP | KERBEROS
+export SPARK_AUTH="NONE"         # NONE | LDAP | KERBEROS | CUSTOM | NOSASL
 ```
 
 ### 2. Add to Claude Code
@@ -98,7 +99,7 @@ Ask Claude things like:
 | `list_databases` | List all available databases |
 | `list_tables` | List tables in a database |
 | `describe_table` | Get table schema (columns, types) |
-| `execute_query` | Run SQL queries with formatted results |
+| `execute_query` | Run read-only SQL queries with formatted results |
 
 ## Authentication
 
@@ -202,6 +203,29 @@ With the Docker Spark server running, add it to your MCP config to test the serv
 ```
 
 Then start a new Claude Code session and ask it to query the sample data.
+
+## Security
+
+### Read-Only Enforcement
+
+The `execute_query` tool only allows read-only SQL statements. Queries must start with one of: `SELECT`, `SHOW`, `DESCRIBE`, `DESC`, `EXPLAIN`, or `WITH`. All other statement types (DROP, INSERT, DELETE, CREATE, ALTER, SET, ADD JAR, etc.) are rejected before reaching the Spark cluster.
+
+### Error Sanitization
+
+Database errors are sanitized before being returned to the MCP client. Internal details such as server hostnames, file paths, and stack traces are not exposed. Connection failures report only the target host/port and error type.
+
+### Credential Handling
+
+- Passwords are never included in log output or error messages
+- The `SparkConfig` object masks passwords in its string representation
+- `SPARK_PASSWORD` is marked as a secret in the MCP registry schema
+
+### Known Limitations
+
+- **No TLS/SSL support** — Thrift connections are unencrypted. For production use with LDAP auth, use an SSH tunnel to protect credentials in transit.
+- **No query timeout** — Long-running queries are not automatically cancelled. Rely on Spark cluster-level timeout configuration.
+- **No per-user access control** — All queries execute with the privileges of the configured Spark user. Use HiveServer2 authorization (Ranger, Sentry) to restrict access at the database level.
+- **Auth mode defaults to NONE** — Appropriate for local development but not for production. Set `SPARK_AUTH` to `LDAP` or `KERBEROS` for authenticated environments.
 
 ## License
 
