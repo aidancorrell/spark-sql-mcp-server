@@ -1,0 +1,116 @@
+name: Update Changelog
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  update-changelog:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Determine change type from labels
+        id: change-type
+        run: |
+          LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
+          if echo "$LABELS" | grep -q '"breaking"'; then
+            echo "type=Breaking Change" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q '"feature"'; then
+            echo "type=Feature" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q '"enhancement"'; then
+            echo "type=Enhancement" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q '"bug"'; then
+            echo "type=Bug Fix" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q '"docs"'; then
+            echo "type=Documentation" >> $GITHUB_OUTPUT
+          else
+            echo "type=Internal" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update CHANGELOG.md
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          CHANGE_TYPE: ${{ steps.change-type.outputs.type }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 << 'PYEOF'
+          import os
+
+          pr_title = os.environ["PR_TITLE"]
+          pr_number = os.environ["PR_NUMBER"]
+          pr_author = os.environ["PR_AUTHOR"]
+          change_type = os.environ["CHANGE_TYPE"]
+          repo = os.environ["REPO"]
+
+          entry = f"* {pr_title} ([#{pr_number}](https://github.com/{repo}/pull/{pr_number})) by @{pr_author}"
+
+          with open("CHANGELOG.md", "r") as f:
+              content = f.read()
+
+          lines = content.split("\n")
+          new_lines = []
+
+          if "## Unreleased" in content:
+              # Find the Unreleased section
+              in_unreleased = False
+              subsection_found = False
+              inserted = False
+              for line in lines:
+                  if line.startswith("## Unreleased"):
+                      in_unreleased = True
+                      new_lines.append(line)
+                      continue
+                  if in_unreleased and line.startswith("## ") and not line.startswith("## Unreleased"):
+                      in_unreleased = False
+                  if in_unreleased and line.strip() == f"### {change_type}":
+                      subsection_found = True
+                      new_lines.append(line)
+                      new_lines.append(entry)
+                      inserted = True
+                      continue
+                  new_lines.append(line)
+              if not subsection_found:
+                  # Add new subsection after Unreleased header
+                  final_lines = []
+                  for line in new_lines:
+                      final_lines.append(line)
+                      if line.startswith("## Unreleased"):
+                          final_lines.append("")
+                          final_lines.append(f"### {change_type}")
+                          final_lines.append("")
+                          final_lines.append(entry)
+                  new_lines = final_lines
+          else:
+              # Create Unreleased section after the header
+              for line in lines:
+                  new_lines.append(line)
+                  if line.startswith("and this project adheres to"):
+                      new_lines.append("")
+                      new_lines.append("## Unreleased")
+                      new_lines.append("")
+                      new_lines.append(f"### {change_type}")
+                      new_lines.append("")
+                      new_lines.append(entry)
+
+          with open("CHANGELOG.md", "w") as f:
+              f.write("\n".join(new_lines))
+          PYEOF
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git diff --staged --quiet || git commit -m "docs: update changelog for #${{ github.event.pull_request.number }}"
+          git push
