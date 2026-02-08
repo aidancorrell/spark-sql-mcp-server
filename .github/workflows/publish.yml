@@ -1,27 +1,23 @@
-name: Publish to MCP Registry
+name: Publish to PyPI
 
 on:
   release:
     types: [published]
 
 jobs:
-  publish-registry:
+  publish:
     runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install mcp-publisher
-        run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz
-          sudo mv mcp-publisher /usr/local/bin/
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
-      - name: Update version in server.json
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          jq ".version = \"$VERSION\" | .packages[0].version = \"$VERSION\"" server.json > server.json.tmp
-          mv server.json.tmp server.json
+      - name: Build package
+        run: uv build
 
-      - name: Publish to MCP Registry
-        env:
-          MCP_REGISTRY_TOKEN: ${{ secrets.MCP_REGISTRY_TOKEN }}
-        run: mcp-publisher publish
+      - name: Publish to PyPI
+        run: uv publish --trusted-publishing always

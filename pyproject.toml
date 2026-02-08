@@ -41,6 +41,7 @@ dev = [
 
 [project.scripts]
 spark-sql-mcp = "spark_sql_mcp.server:main"
+spark-sql-mcp-server = "spark_sql_mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/aidancorrell/spark-sql-mcp-server"
