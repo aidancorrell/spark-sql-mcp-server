@@ -44,3 +44,30 @@ def test_frozen():
     config = SparkConfig(host="localhost")
     with pytest.raises(AttributeError):
         config.host = "other"
+
+
+def test_repr_masks_password():
+    config = SparkConfig(host="localhost", password="supersecret")
+    r = repr(config)
+    assert "supersecret" not in r
+    assert "****" in r
+
+
+def test_repr_no_password():
+    config = SparkConfig(host="localhost")
+    r = repr(config)
+    assert "password=None" in r
+
+
+def test_from_env_invalid_auth(monkeypatch):
+    monkeypatch.setenv("SPARK_HOST", "localhost")
+    monkeypatch.setenv("SPARK_AUTH", "FOOBAR")
+    with pytest.raises(ValueError, match="Invalid SPARK_AUTH"):
+        SparkConfig.from_env()
+
+
+def test_from_env_auth_case_insensitive(monkeypatch):
+    monkeypatch.setenv("SPARK_HOST", "localhost")
+    monkeypatch.setenv("SPARK_AUTH", "ldap")
+    config = SparkConfig.from_env()
+    assert config.auth == "LDAP"
